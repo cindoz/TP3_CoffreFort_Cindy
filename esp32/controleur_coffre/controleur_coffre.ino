@@ -1,9 +1,16 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include <ESP32Servo.h>
 
+// ---- Écran LCD ----
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// ---- Branchement pavé numerique ----
+// ---- Pavé numerique ----
+
 const int rangees[4] = {13, 14, 25, 26};
 const int colonnes[4] = {27, 32, 33, 23};
 
@@ -16,6 +23,16 @@ const char touches[4][4] = {
 
 const int MIN_CHIFFRES = 4;
 const int MAX_CHIFFRES = 6;
+
+// ---- Servomoteur ----
+Servo serrure;
+
+const int PIN_SERVO = 18;
+
+const int POSITION_VERROUILLEE = 0;
+const int POSITION_DEVERROUILLEE = 90;
+
+bool coffreDeverrouille = false;
 
 // ---- Authentification ----
 enum EtatAuthentification {
@@ -30,6 +47,46 @@ EtatAuthentification etatActuel = SAISIE_UTILISATEUR;
 String numeroUtilisateur = "";
 String motDePasse = "";
 
+// ---- Bluetooth BLE ----
+const char* UUID_SERVICE =
+    "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+
+const char* UUID_REQUETE =
+    "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+const char* UUID_REPONSE =
+    "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+
+BLECharacteristic* caracteristiqueRequete = nullptr;
+
+volatile bool raspberryConnecte = false;
+volatile bool relancerPublicite = false;
+volatile int reponseAuthentification = -1;
+
+unsigned long numeroDemande = 0;
+unsigned long debutValidation = 0;
+
+const unsigned long DELAI_REPONSE = 10000;
+
+void initialiserBluetooth();
+void envoyerIdentifiants();
+void verifierReponse();
+void afficherEtat();
+void afficherResultat(bool autorise);
+void afficherErreur(String message);
+
+// ---- Controle de la serrure ----
+void verrouiller() {
+  serrure.write(POSITION_VERROUILLEE);
+  coffreDeverrouille = false;
+}
+
+void deverrouiller() {
+  serrure.write(POSITION_DEVERROUILLEE);
+  coffreDeverrouille = true;
+}
+
+// ---- Lecture du pavé numerique ----
 char lireTouche() {
   for (int r = 0; r < 4; r++) {
     for (int i = 0; i < 4; i++) {
@@ -40,8 +97,10 @@ char lireTouche() {
     delayMicroseconds(50);
 
     for (int c = 0; c < 4; c++) {
+
       if (digitalRead(colonnes[c]) == HIGH) {
         digitalWrite(rangees[r], LOW);
+
         return touches[r][c];
       }
     }
@@ -52,6 +111,7 @@ char lireTouche() {
   return '\0';
 }
 
+// ---- Affichage LCD ----
 void afficherEtat() {
   lcd.clear();
 
@@ -68,6 +128,7 @@ void afficherEtat() {
     lcd.print("Entrez le code");
 
     lcd.setCursor(0, 1);
+
     for (int i = 0; i < motDePasse.length(); i++) {
       lcd.print("*");
     }
@@ -82,23 +143,71 @@ void afficherEtat() {
   }
 }
 
-void effacerDernierChiffre() {
-  String* saisie = (etatActuel == SAISIE_UTILISATEUR)
-      ? &numeroUtilisateur
-      : &motDePasse;
+void afficherResultat(bool autorise) {
+  etatActuel = RESULTAT;
 
-  if (saisie->length() > 0) {
-    saisie->remove(saisie->length() - 1);
-    afficherEtat();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+
+  if (autorise) {
+    lcd.print("Acces autorise");
+  } else {
+    lcd.print("Acces refuse");
+  }
+
+  lcd.setCursor(0, 1);
+
+  if (autorise) {
+    lcd.print("Coffre deverrou.");
+  } else {
+    lcd.print("* pour retour");
   }
 }
 
-void confirmerSaisie() {
-  String* saisie = (etatActuel == SAISIE_UTILISATEUR)
-      ? &numeroUtilisateur
-      : &motDePasse;
+void afficherErreur(String message) {
+  etatActuel = RESULTAT;
 
-  if (saisie->length() < MIN_CHIFFRES) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(message);
+
+  lcd.setCursor(0, 1);
+  lcd.print("* pour retour");
+}
+
+// ---- Saisie des identifiants ----
+void effacerDernierChiffre() {
+  if (etatActuel == SAISIE_UTILISATEUR) {
+    if (numeroUtilisateur.length() > 0) {
+      numeroUtilisateur.remove(
+          numeroUtilisateur.length() - 1
+      );
+    }
+  }
+
+  else if (etatActuel == SAISIE_MOT_DE_PASSE) {
+    if (motDePasse.length() > 0) {
+      motDePasse.remove(
+          motDePasse.length() - 1
+      );
+    }
+  }
+
+  afficherEtat();
+}
+
+void confirmerSaisie() {
+  int nombreChiffres = 0;
+
+  if (etatActuel == SAISIE_UTILISATEUR) {
+    nombreChiffres = numeroUtilisateur.length();
+  }
+
+  else if (etatActuel == SAISIE_MOT_DE_PASSE) {
+    nombreChiffres = motDePasse.length();
+  }
+
+  if (nombreChiffres < MIN_CHIFFRES) {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Min. 4 chiffres");
@@ -110,32 +219,32 @@ void confirmerSaisie() {
 
   if (etatActuel == SAISIE_UTILISATEUR) {
     etatActuel = SAISIE_MOT_DE_PASSE;
-  } else {
-    etatActuel = VALIDATION;
+    afficherEtat();
   }
 
-  afficherEtat();
-}
-
-// ---- Reponse du Raspberry Pi ----
-void afficherResultat(bool autorise) {
-  etatActuel = RESULTAT;
-  lcd.clear();
-
-  lcd.setCursor(0, 0);
-  lcd.print(autorise ? "Acces autorise" : "Acces refuse");
+  else if (etatActuel == SAISIE_MOT_DE_PASSE) {
+    envoyerIdentifiants();
+  }
 }
 
 void reinitialiserSaisie() {
   numeroUtilisateur = "";
   motDePasse = "";
+
+  reponseAuthentification = -1;
   etatActuel = SAISIE_UTILISATEUR;
 
   afficherEtat();
 }
 
 void traiterTouche(char touche) {
-  if (etatActuel == VALIDATION || etatActuel == RESULTAT) {
+
+  if (etatActuel == VALIDATION) {
+    return;
+  }
+
+  // Apres le résultat, * permet de recommencer
+  if (etatActuel == RESULTAT) {
     if (touche == '*') {
       reinitialiserSaisie();
     }
@@ -151,18 +260,172 @@ void traiterTouche(char touche) {
   }
 
   else if (touche >= '0' && touche <= '9') {
-    String* saisie = (etatActuel == SAISIE_UTILISATEUR)
-        ? &numeroUtilisateur
-        : &motDePasse;
+    if (etatActuel == SAISIE_UTILISATEUR) {
+      if (numeroUtilisateur.length() < MAX_CHIFFRES) {
+        numeroUtilisateur += touche;
+        afficherEtat();
+      }
+    }
 
-    if (saisie->length() < MAX_CHIFFRES) {
-      *saisie += touche;
-      afficherEtat();
+    else if (etatActuel == SAISIE_MOT_DE_PASSE) {
+      if (motDePasse.length() < MAX_CHIFFRES) {
+        motDePasse += touche;
+        afficherEtat();
+      }
     }
   }
 }
 
+// ---- Evénements Bluetooth ----
+class ConnexionCallbacks : public BLEServerCallbacks {
+
+  void onConnect(BLEServer* serveur) override {
+    raspberryConnecte = true;
+  }
+
+  void onDisconnect(BLEServer* serveur) override {
+    raspberryConnecte = false;
+    relancerPublicite = true;
+  }
+};
+
+class ReponseCallbacks : public BLECharacteristicCallbacks {
+
+  void onWrite(BLECharacteristic* caracteristique) override {
+
+    String valeur = caracteristique->getValue().c_str();
+
+    int separateur = valeur.indexOf('|');
+
+    if (separateur == -1) {
+      return;
+    }
+
+    String numeroRecu = valeur.substring(0, separateur);
+    String resultat = valeur.substring(separateur + 1);
+
+    if (etatActuel != VALIDATION) {
+      return;
+    }
+
+    if (numeroRecu != String(numeroDemande)) {
+      return;
+    }
+
+    if (resultat == "1") {
+      reponseAuthentification = 1;
+    }
+
+    else if (resultat == "0") {
+      reponseAuthentification = 0;
+    }
+  }
+};
+
+// ---- Configuration Bluetooth ----
+
+void initialiserBluetooth() {
+  BLEDevice::init("CoffreESP32");
+
+  BLEServer* serveur = BLEDevice::createServer();
+  serveur->setCallbacks(new ConnexionCallbacks());
+
+  BLEService* service = serveur->createService(UUID_SERVICE);
+
+  caracteristiqueRequete = service->createCharacteristic(
+      UUID_REQUETE,
+      BLECharacteristic::PROPERTY_NOTIFY
+  );
+
+  caracteristiqueRequete->addDescriptor(new BLE2902());
+
+  BLECharacteristic* caracteristiqueReponse =
+      service->createCharacteristic(
+          UUID_REPONSE,
+          BLECharacteristic::PROPERTY_WRITE
+      );
+
+  caracteristiqueReponse->setCallbacks(
+      new ReponseCallbacks()
+  );
+
+  service->start();
+
+  BLEAdvertising* publicite = BLEDevice::getAdvertising();
+
+  publicite->addServiceUUID(UUID_SERVICE);
+  publicite->setScanResponse(true);
+
+  BLEDevice::startAdvertising();
+}
+
+// ---- Communication avec le Raspberry Pi ----
+void envoyerIdentifiants() {
+  reponseAuthentification = -1;
+
+  if (!raspberryConnecte) {
+    afficherErreur("Pi non connecte");
+    return;
+  }
+
+  numeroDemande++;
+
+  if (numeroDemande > 999999) {
+    numeroDemande = 1;
+  }
+
+  etatActuel = VALIDATION;
+  debutValidation = millis();
+
+  afficherEtat();
+
+  // Format : numeroDemande|numero|motDePasse
+  String demande = String(numeroDemande);
+  demande += "|";
+  demande += numeroUtilisateur;
+  demande += "|";
+  demande += motDePasse;
+
+  caracteristiqueRequete->setValue(demande.c_str());
+  caracteristiqueRequete->notify();
+}
+
+void verifierReponse() {
+  if (etatActuel != VALIDATION) {
+    return;
+  }
+
+  if (!raspberryConnecte) {
+    reponseAuthentification = -1;
+    afficherErreur("Pi deconnecte");
+    return;
+  }
+
+  int reponse = reponseAuthentification;
+
+  if (reponse == 1) {
+    reponseAuthentification = -1;
+
+    deverrouiller();
+    afficherResultat(true);
+  }
+
+  else if (reponse == 0) {
+    reponseAuthentification = -1;
+    afficherResultat(false);
+  }
+
+  else if (millis() - debutValidation >= DELAI_REPONSE) {
+    reponseAuthentification = -1;
+    afficherErreur("Erreur serveur");
+  }
+}
+
+// ---- Demarrage ----
+
 void setup() {
+
+  // Configure le clavier
   for (int r = 0; r < 4; r++) {
     pinMode(rangees[r], OUTPUT);
     digitalWrite(rangees[r], LOW);
@@ -172,11 +435,20 @@ void setup() {
     pinMode(colonnes[c], INPUT_PULLDOWN);
   }
 
+  // Initialise l'ecran LCD
   Wire.begin(21, 22);
   lcd.init();
   lcd.backlight();
 
+  // Initialise le servo
+  serrure.setPeriodHertz(50);
+  serrure.attach(PIN_SERVO, 500, 2400);
+
+  verrouiller();
+
   afficherEtat();
+
+  initialiserBluetooth();
 }
 
 void loop() {
@@ -186,9 +458,18 @@ void loop() {
 
   if (touche == '\0') {
     toucheEnfoncee = false;
-  } else if (!toucheEnfoncee) {
+  }
+
+  else if (!toucheEnfoncee) {
     toucheEnfoncee = true;
     traiterTouche(touche);
     delay(30);
+  }
+
+  verifierReponse();
+
+  if (relancerPublicite) {
+    relancerPublicite = false;
+    BLEDevice::startAdvertising();
   }
 }

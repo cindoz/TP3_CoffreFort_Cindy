@@ -13,5 +13,15 @@
         "numero": "1111",
         "date": "2026-11-22T23:13:18",
         "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T12:48:02",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "8888",
+        "date": "2026-11-23T12:48:15",
+        "resultat": "REFUSE"
     }
 ]
