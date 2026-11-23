@@ -1,0 +1,17 @@
+[
+    {
+        "numero": "0000",
+        "date": "2026-11-22T23:12:49",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-22T23:12:57",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-22T23:13:18",
+        "resultat": "AUTORISE"
+    }
+]
