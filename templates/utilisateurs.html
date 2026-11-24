@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>Gestion des utilisateurs</h1>
+
     <p>
         <a href="{{ url_for('add_utilisateur') }}">
             Ajouter un utilisateur
@@ -19,6 +20,7 @@
             <tr>
                 <th>Numéro</th>
                 <th>Mot de passe</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -26,6 +28,18 @@
             <tr>
                 <td>{{ utilisateur.numero }}</td>
                 <td>{{ utilisateur.mot_de_passe }}</td>
+                <td>
+                    <a href="{{ url_for('edit_utilisateur', numero=utilisateur.numero) }}">
+                        Modifier
+                    </a>
+
+                    <form method="POST"
+                          action="{{ url_for('supprimer_utilisateur', numero=utilisateur.numero) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                        <button type="submit">Supprimer</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

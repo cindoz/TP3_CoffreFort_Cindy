@@ -10,7 +10,6 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // ---- Pavé numerique ----
-
 const int rangees[4] = {13, 14, 25, 26};
 const int colonnes[4] = {27, 32, 33, 23};
 
@@ -67,6 +66,9 @@ unsigned long numeroDemande = 0;
 unsigned long debutValidation = 0;
 
 const unsigned long DELAI_REPONSE = 10000;
+const unsigned long DELAI_AFFICHAGE = 300;
+
+bool validationAffichee = false;
 
 void initialiserBluetooth();
 void envoyerIdentifiants();
@@ -322,8 +324,7 @@ class ReponseCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
-// ---- Configuration Bluetooth ----
-
+// ---- Configuration Bluetooth BLE ----
 void initialiserBluetooth() {
   BLEDevice::init("CoffreESP32");
 
@@ -377,7 +378,7 @@ void envoyerIdentifiants() {
   etatActuel = VALIDATION;
   debutValidation = millis();
 
-  afficherEtat();
+  validationAffichee = false;
 
   // Format : numeroDemande|numero|motDePasse
   String demande = String(numeroDemande);
@@ -419,10 +420,14 @@ void verifierReponse() {
     reponseAuthentification = -1;
     afficherErreur("Erreur serveur");
   }
+
+  else if (millis() - debutValidation >= DELAI_AFFICHAGE && !validationAffichee) {
+    afficherEtat();
+    validationAffichee = true;
+  }
 }
 
 // ---- Demarrage ----
-
 void setup() {
 
   // Configure le clavier

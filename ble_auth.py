@@ -1,14 +1,12 @@
 import asyncio
 
 from bleak import BleakClient, BleakScanner
-from app import authentifier
 
 # ---- Configuration Bluetooth ----
 NOM_ESP32 = "CoffreESP32"
 
 UUID_REQUETE = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 UUID_REPONSE = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
-
 
 # ---- Vérification du format ----
 def identifiants_valides(numero, mot_de_passe):
@@ -43,6 +41,7 @@ def verifier_demande(message):
         return None
 
     if identifiants_valides(numero, mot_de_passe):
+        from app import authentifier
         autorise = authentifier(numero, mot_de_passe)
     else:
         autorise = False
@@ -54,7 +53,6 @@ def verifier_demande(message):
         print("Acces refuse pour", numero)
         resultat = "0"
 
-    # Exemple de reponse : "3|1"
     return id_demande + "|" + resultat
 
 

@@ -63,5 +63,130 @@
         "numero": "0001",
         "date": "2026-11-23T19:04:06",
         "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:10:10",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:10:24",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:10:43",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:11:29",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:11:59",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:12:11",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:39:45",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T22:39:58",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-23T22:40:57",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T23:01:52",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-23T23:02:08",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-23T23:02:23",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T23:13:25",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T23:14:04",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T23:14:13",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T23:14:26",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T23:16:45",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T23:17:12",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T23:20:59",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "2026",
+        "date": "2026-11-23T23:21:18",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-23T23:21:39",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "3333",
+        "date": "2026-11-23T23:23:02",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "3333",
+        "date": "2026-11-23T23:23:26",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T23:23:36",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "88888",
+        "date": "2026-11-23T23:24:01",
+        "resultat": "AUTORISE"
     }
 ]
