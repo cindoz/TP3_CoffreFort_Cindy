@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un utilisateur</title>
+</head>
+<body>
+    <h1>Ajouter un utilisateur</h1>
+
+    <form method="POST">
+        <label for="numero">Numéro d'utilisateur :</label>
+        <input type="text" id="numero" name="numero"
+               minlength="4" maxlength="6"
+               pattern="[0-9]{4,6}" required>
+
+        <br><br>
+
+        <label for="mot_de_passe">Mot de passe :</label>
+        <input type="password" id="mot_de_passe" name="mot_de_passe"
+               minlength="4" maxlength="6"
+               pattern="[0-9]{4,6}" required>
+
+        <br><br>
+
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <p><a href="{{ url_for('afficher_utilisateurs') }}">Retour aux utilisateurs</a></p>
+</body>
+</html>

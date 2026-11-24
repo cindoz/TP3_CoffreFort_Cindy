@@ -23,5 +23,45 @@
         "numero": "8888",
         "date": "2026-11-23T12:48:15",
         "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T16:56:48",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T16:57:19",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T16:57:30",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-23T17:00:27",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T17:11:57",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T17:59:52",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T18:00:12",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-23T19:04:06",
+        "resultat": "AUTORISE"
     }
 ]
