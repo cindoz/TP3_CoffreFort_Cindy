@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Mon Coffre{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="card p-4 p-md-5">
+            <div class="card-body">
+
+                <div class="home-icon mb-4">♡</div>
+
+                <h1 class="page-title mb-3">
+                    Bienvenue dans votre coffre-fort
+                </h1>
+
+                <p class="subtitle mb-4">
+                    Gérez les utilisateurs autorisés à accéder
+                    à votre coffre-fort électronique.
+                </p>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ url_for('afficher_utilisateurs') }}"
+                       class="btn btn-rose">
+                        Voir les utilisateurs
+                    </a>
+
+                    <a href="{{ url_for('add_utilisateur') }}"
+                       class="btn btn-outline-rose">
+                        Ajouter un utilisateur
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

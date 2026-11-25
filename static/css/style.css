@@ -1,0 +1,104 @@
+body {
+    background-color: #fff6fa;
+    color: #44303c;
+    font-family: Arial, sans-serif;
+}
+
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f3dce7;
+    padding: 18px 0;
+}
+
+.navbar-brand {
+    color: #b85c87 !important;
+    font-size: 22px;
+}
+
+.nav-link {
+    color: #725667;
+}
+
+.nav-link:hover {
+    color: #b85c87;
+}
+
+.page-title {
+    color: #563646;
+    font-weight: 700;
+}
+
+.card {
+    border: 1px solid #f3dce7;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(157, 86, 119, 0.05);
+}
+
+.btn-rose {
+    background-color: #c76f99;
+    border: 1px solid #c76f99;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 18px;
+}
+
+.btn-rose:hover {
+    background-color: #ae557f;
+    border-color: #ae557f;
+    color: #ffffff;
+}
+
+.btn-outline-rose {
+    color: #b85c87;
+    border: 1px solid #e6bfd1;
+    background-color: white;
+    border-radius: 8px;
+}
+
+.btn-outline-rose:hover {
+    background-color: #fce9f2;
+    color: #9d456e;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ead3df;
+    padding: 11px 12px;
+}
+
+.form-control:focus {
+    border-color: #d78caf;
+    box-shadow: 0 0 0 0.2rem rgba(199, 111, 153, 0.15);
+}
+
+.table thead th {
+    background-color: #fce9f2;
+    color: #684456;
+    font-weight: 600;
+}
+
+.table td,
+.table th {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.subtitle {
+    color: #907b87;
+}
+
+.home-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fce4ee;
+    color: #b85c87;
+    border-radius: 15px;
+    font-size: 28px;
+}

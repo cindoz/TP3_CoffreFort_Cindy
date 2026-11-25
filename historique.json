@@ -188,5 +188,115 @@
         "numero": "88888",
         "date": "2026-11-23T23:24:01",
         "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-23T23:35:20",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:19:17",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:25:17",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:25:31",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:34:32",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:35:05",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:35:27",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "1111",
+        "date": "2026-11-24T01:35:40",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:37:36",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T01:38:47",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T13:31:27",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T13:32:19",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T13:32:55",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T13:38:06",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T22:37:31",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T22:47:29",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-24T22:48:40",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-24T22:49:59",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T10:13:18",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T10:14:11",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0001",
+        "date": "2026-11-25T10:15:28",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T10:26:21",
+        "resultat": "AUTORISE"
     }
 ]

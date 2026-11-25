@@ -44,7 +44,7 @@ def authentifier(numero, mot_de_passe):
 
 @app.route("/")
 def accueil():
-    return "Coffre-fort !"
+    return render_template("accueil.html")
 
 
 @app.route("/utilisateurs")

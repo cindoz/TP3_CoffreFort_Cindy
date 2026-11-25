@@ -33,6 +33,11 @@ const int POSITION_DEVERROUILLEE = 90;
 
 bool coffreDeverrouille = false;
 
+unsigned long debutDeverrouillage = 0;
+const unsigned long DELAI_VERROUILLAGE = 15000;
+
+bool porteOuverteDepuisDeverrouillage = false;
+
 // ---- Authentification ----
 enum EtatAuthentification {
   SAISIE_UTILISATEUR,
@@ -70,14 +75,22 @@ const unsigned long DELAI_AFFICHAGE = 300;
 
 bool validationAffichee = false;
 
+const int PIN_BOUTON_PORTE = 19;
+
 void initialiserBluetooth();
 void envoyerIdentifiants();
 void verifierReponse();
 void afficherEtat();
 void afficherResultat(bool autorise);
 void afficherErreur(String message);
+bool porteFermee();
+void verifierVerrouillageAutomatique();
 
 // ---- Controle de la serrure ----
+bool porteFermee() {
+  return digitalRead(PIN_BOUTON_PORTE) == LOW;
+}
+
 void verrouiller() {
   serrure.write(POSITION_VERROUILLEE);
   coffreDeverrouille = false;
@@ -86,6 +99,34 @@ void verrouiller() {
 void deverrouiller() {
   serrure.write(POSITION_DEVERROUILLEE);
   coffreDeverrouille = true;
+
+  debutDeverrouillage = millis();
+  porteOuverteDepuisDeverrouillage = !porteFermee();
+}
+
+void verifierVerrouillageAutomatique() {
+  if (!coffreDeverrouille) {
+    return;
+  }
+
+  if (!porteFermee()) {
+    porteOuverteDepuisDeverrouillage = true;
+    return;
+  }
+
+  if (porteOuverteDepuisDeverrouillage ||
+      millis() - debutDeverrouillage >= DELAI_VERROUILLAGE) {
+
+    verrouiller();
+
+    if (etatActuel == RESULTAT) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Coffre verrouille");
+      lcd.setCursor(0, 1);
+      lcd.print("* pour retour");
+    }
+  }
 }
 
 // ---- Lecture du pavé numerique ----
@@ -248,6 +289,10 @@ void traiterTouche(char touche) {
   // Apres le résultat, * permet de recommencer
   if (etatActuel == RESULTAT) {
     if (touche == '*') {
+      if (coffreDeverrouille && porteFermee()) {
+        verrouiller();
+      }
+
       reinitialiserSaisie();
     }
     return;
@@ -449,6 +494,9 @@ void setup() {
   serrure.setPeriodHertz(50);
   serrure.attach(PIN_SERVO, 500, 2400);
 
+  // Initialise le bouton de porte
+  pinMode(PIN_BOUTON_PORTE, INPUT_PULLUP);
+
   verrouiller();
 
   afficherEtat();
@@ -472,6 +520,8 @@ void loop() {
   }
 
   verifierReponse();
+
+  verifierVerrouillageAutomatique();
 
   if (relancerPublicite) {
     relancerPublicite = false;
