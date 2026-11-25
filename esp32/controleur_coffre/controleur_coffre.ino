@@ -38,6 +38,37 @@ const unsigned long DELAI_VERROUILLAGE = 15000;
 
 bool porteOuverteDepuisDeverrouillage = false;
 
+// ---- Buzzer ----
+const int PIN_BUZZER = 15;
+const unsigned long DELAI_ALARME = 15000;
+
+enum TypeSon {
+  AUCUN_SON,
+  SON_AUTORISE,
+  SON_REFUSE,
+  SON_VERROUILLAGE,
+  SON_ALARME
+};
+
+TypeSon sonActuel = AUCUN_SON;
+
+unsigned long debutSon = 0;
+unsigned long debutOuverture = 0;
+
+bool buzzerActif = false;
+bool ouvertureEnCours = false;
+int nombreBipsTermines = 0;
+
+// ---- DEL ----
+const int PIN_DEL_ROUGE = 5;
+const int PIN_DEL_VERTE = 4;
+
+const unsigned long DUREE_CLIGNOTEMENT = 150;
+
+bool clignotementRougeActif = false;
+unsigned long debutClignotementRouge = 0;
+int etapeClignotementRouge = 0;
+
 // ---- Authentification ----
 enum EtatAuthentification {
   SAISIE_UTILISATEUR,
@@ -85,8 +116,153 @@ void afficherResultat(bool autorise);
 void afficherErreur(String message);
 bool porteFermee();
 void verifierVerrouillageAutomatique();
+void afficherAlarme();
+void arreterSon();
+void demarrerSon(TypeSon type);
+void mettreAJourSon();
+void demarrerClignotementRouge();
+void mettreAJourDelRouge();
+void verrouiller();
+void deverrouiller();
+char lireTouche();
+void effacerDernierChiffre();
+void confirmerSaisie();
+void reinitialiserSaisie();
+void traiterTouche(char touche);
 
-// ---- Controle de la serrure ----
+// ---- DEL ----
+void demarrerClignotementRouge() {
+  if (sonActuel == SON_ALARME) {
+    return;
+  }
+
+  clignotementRougeActif = true;
+  etapeClignotementRouge = 0;
+  debutClignotementRouge = millis();
+
+  digitalWrite(PIN_DEL_ROUGE, HIGH);
+}
+
+void mettreAJourDelRouge() {
+  if (sonActuel == SON_ALARME) {
+    return;
+  }
+
+  if (!clignotementRougeActif) {
+    return;
+  }
+
+  if (millis() - debutClignotementRouge <
+      DUREE_CLIGNOTEMENT) {
+    return;
+  }
+
+  debutClignotementRouge = millis();
+  etapeClignotementRouge++;
+
+  if (etapeClignotementRouge >= 4) {
+    digitalWrite(PIN_DEL_ROUGE, LOW);
+    clignotementRougeActif = false;
+    return;
+  }
+
+  if (etapeClignotementRouge % 2 == 0) {
+    digitalWrite(PIN_DEL_ROUGE, HIGH);
+  } else {
+    digitalWrite(PIN_DEL_ROUGE, LOW);
+  }
+}
+
+// ---- Buzzer ----
+void arreterSon() {
+  if (sonActuel == SON_ALARME) {
+    digitalWrite(PIN_DEL_ROUGE, LOW);
+  }
+
+  ledcWriteTone(PIN_BUZZER, 0);
+
+  sonActuel = AUCUN_SON;
+  buzzerActif = false;
+  nombreBipsTermines = 0;
+}
+
+void demarrerSon(TypeSon type) {
+  sonActuel = type;
+  debutSon = millis();
+  nombreBipsTermines = 0;
+  buzzerActif = true;
+
+  if (type == SON_ALARME) {
+    clignotementRougeActif = false;
+    digitalWrite(PIN_DEL_ROUGE, HIGH);
+  }
+
+  ledcWriteTone(PIN_BUZZER, 2000);
+}
+
+void mettreAJourSon() {
+  if (sonActuel == AUCUN_SON) {
+    return;
+  }
+
+  unsigned long maintenant = millis();
+  unsigned long dureeBip = 120;
+  unsigned long dureePause = 120;
+  int nombreBips = 1;
+
+  if (sonActuel == SON_AUTORISE) {
+    dureeBip = 120;
+    dureePause = 120;
+    nombreBips = 2;
+  }
+
+  else if (sonActuel == SON_REFUSE) {
+    dureeBip = 600;
+    nombreBips = 1;
+  }
+
+  else if (sonActuel == SON_VERROUILLAGE) {
+    dureeBip = 150;
+    nombreBips = 1;
+  }
+
+  else if (sonActuel == SON_ALARME) {
+    dureeBip = 200;
+    dureePause = 500;
+  }
+
+  if (buzzerActif) {
+    if (maintenant - debutSon >= dureeBip) {
+      ledcWriteTone(PIN_BUZZER, 0);
+
+      if (sonActuel == SON_ALARME) {
+        digitalWrite(PIN_DEL_ROUGE, LOW);
+      }
+
+      buzzerActif = false;
+      debutSon = maintenant;
+      nombreBipsTermines++;
+
+      if (sonActuel != SON_ALARME &&
+          nombreBipsTermines >= nombreBips) {
+        arreterSon();
+      }
+    }
+  }
+
+  else if (maintenant - debutSon >= dureePause) {
+    ledcWriteTone(PIN_BUZZER, 2000);
+
+    if (sonActuel == SON_ALARME) {
+      digitalWrite(PIN_DEL_ROUGE, HIGH);
+    }
+
+    buzzerActif = true;
+    debutSon = maintenant;
+  }
+}
+
+// ---- Controle de la serrure + gestion porte ----
 bool porteFermee() {
   return digitalRead(PIN_BOUTON_PORTE) == LOW;
 }
@@ -94,64 +270,100 @@ bool porteFermee() {
 void verrouiller() {
   serrure.write(POSITION_VERROUILLEE);
   coffreDeverrouille = false;
+
+  digitalWrite(PIN_DEL_VERTE, LOW);
 }
 
 void deverrouiller() {
   serrure.write(POSITION_DEVERROUILLEE);
   coffreDeverrouille = true;
 
+  digitalWrite(PIN_DEL_VERTE, HIGH);
+
   debutDeverrouillage = millis();
   porteOuverteDepuisDeverrouillage = !porteFermee();
+
+  demarrerSon(SON_AUTORISE);
 }
 
 void verifierVerrouillageAutomatique() {
-  if (!coffreDeverrouille) {
-    return;
-  }
-
   if (!porteFermee()) {
-    porteOuverteDepuisDeverrouillage = true;
+    if (coffreDeverrouille) {
+      porteOuverteDepuisDeverrouillage = true;
+    }
+
+    if (!ouvertureEnCours) {
+      ouvertureEnCours = true;
+      debutOuverture = millis();
+    }
+
+    if (millis() - debutOuverture >= DELAI_ALARME &&
+        sonActuel != SON_ALARME) {
+
+      demarrerSon(SON_ALARME);
+      afficherAlarme();
+    }
+
     return;
   }
 
-  if (porteOuverteDepuisDeverrouillage ||
-      millis() - debutDeverrouillage >= DELAI_VERROUILLAGE) {
+  ouvertureEnCours = false;
+
+  bool alarmeEtaitActive = sonActuel == SON_ALARME;
+
+  if (alarmeEtaitActive) {
+    arreterSon();
+  }
+
+  if (coffreDeverrouille &&
+      (porteOuverteDepuisDeverrouillage ||
+       millis() - debutDeverrouillage >= DELAI_VERROUILLAGE)) {
 
     verrouiller();
+
+    demarrerSon(SON_VERROUILLAGE);
+    demarrerClignotementRouge();
 
     if (etatActuel == RESULTAT) {
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Coffre verrouille");
+      lcd.print("Coffre verrou.");
       lcd.setCursor(0, 1);
       lcd.print("* pour retour");
     }
   }
+
+  else if (alarmeEtaitActive) {
+    if (etatActuel == RESULTAT) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+
+      if (coffreDeverrouille) {
+        lcd.print("Coffre deverrou.");
+      } else {
+        lcd.print("Coffre verrou.");
+      }
+
+      lcd.setCursor(0, 1);
+      lcd.print("* pour retour");
+    } else {
+      afficherEtat();
+    }
+  }
 }
 
-// ---- Lecture du pavé numerique ----
-char lireTouche() {
-  for (int r = 0; r < 4; r++) {
-    for (int i = 0; i < 4; i++) {
-      digitalWrite(rangees[i], LOW);
-    }
+void afficherAlarme() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
 
-    digitalWrite(rangees[r], HIGH);
-    delayMicroseconds(50);
-
-    for (int c = 0; c < 4; c++) {
-
-      if (digitalRead(colonnes[c]) == HIGH) {
-        digitalWrite(rangees[r], LOW);
-
-        return touches[r][c];
-      }
-    }
-
-    digitalWrite(rangees[r], LOW);
+  if (coffreDeverrouille) {
+    lcd.print("Coffre deverrou.");
+  } else {
+    lcd.print("Coffre verrou.");
   }
 
-  return '\0';
+  lcd.setCursor(0, 1);
+  lcd.print("ALARME:PORTE OUV");
 }
 
 // ---- Affichage LCD ----
@@ -218,6 +430,29 @@ void afficherErreur(String message) {
   lcd.print("* pour retour");
 }
 
+// ---- Lecture du pavé numerique ----
+char lireTouche() {
+  for (int r = 0; r < 4; r++) {
+    for (int i = 0; i < 4; i++) {
+      digitalWrite(rangees[i], LOW);
+    }
+
+    digitalWrite(rangees[r], HIGH);
+    delayMicroseconds(50);
+
+    for (int c = 0; c < 4; c++) {
+      if (digitalRead(colonnes[c]) == HIGH) {
+        digitalWrite(rangees[r], LOW);
+        return touches[r][c];
+      }
+    }
+
+    digitalWrite(rangees[r], LOW);
+  }
+
+  return '\0';
+}
+
 // ---- Saisie des identifiants ----
 void effacerDernierChiffre() {
   if (etatActuel == SAISIE_UTILISATEUR) {
@@ -281,6 +516,9 @@ void reinitialiserSaisie() {
 }
 
 void traiterTouche(char touche) {
+  if (sonActuel == SON_ALARME) {
+    return;
+  }
 
   if (etatActuel == VALIDATION) {
     return;
@@ -291,10 +529,14 @@ void traiterTouche(char touche) {
     if (touche == '*') {
       if (coffreDeverrouille && porteFermee()) {
         verrouiller();
+
+        demarrerSon(SON_VERROUILLAGE);
+        demarrerClignotementRouge();
       }
 
       reinitialiserSaisie();
     }
+
     return;
   }
 
@@ -325,7 +567,6 @@ void traiterTouche(char touche) {
 
 // ---- Evénements Bluetooth ----
 class ConnexionCallbacks : public BLEServerCallbacks {
-
   void onConnect(BLEServer* serveur) override {
     raspberryConnecte = true;
   }
@@ -337,9 +578,7 @@ class ConnexionCallbacks : public BLEServerCallbacks {
 };
 
 class ReponseCallbacks : public BLECharacteristicCallbacks {
-
   void onWrite(BLECharacteristic* caracteristique) override {
-
     String valeur = caracteristique->getValue().c_str();
 
     int separateur = valeur.indexOf('|');
@@ -458,6 +697,10 @@ void verifierReponse() {
 
   else if (reponse == 0) {
     reponseAuthentification = -1;
+
+    demarrerSon(SON_REFUSE);
+    demarrerClignotementRouge();
+
     afficherResultat(false);
   }
 
@@ -466,7 +709,8 @@ void verifierReponse() {
     afficherErreur("Erreur serveur");
   }
 
-  else if (millis() - debutValidation >= DELAI_AFFICHAGE && !validationAffichee) {
+  else if (millis() - debutValidation >= DELAI_AFFICHAGE &&
+           !validationAffichee) {
     afficherEtat();
     validationAffichee = true;
   }
@@ -492,10 +736,20 @@ void setup() {
 
   // Initialise le servo
   serrure.setPeriodHertz(50);
-  serrure.attach(PIN_SERVO, 500, 2400);
+  serrure.attach(PIN_SERVO, 1000, 2000);
 
   // Initialise le bouton de porte
   pinMode(PIN_BOUTON_PORTE, INPUT_PULLUP);
+
+  // Initialise les DEL
+  pinMode(PIN_DEL_ROUGE, OUTPUT);
+  pinMode(PIN_DEL_VERTE, OUTPUT);
+
+  digitalWrite(PIN_DEL_ROUGE, LOW);
+  digitalWrite(PIN_DEL_VERTE, LOW);
+
+  ledcAttach(PIN_BUZZER, 2000, 8);
+  arreterSon();
 
   verrouiller();
 
@@ -522,6 +776,9 @@ void loop() {
   verifierReponse();
 
   verifierVerrouillageAutomatique();
+
+  mettreAJourSon();
+  mettreAJourDelRouge();
 
   if (relancerPublicite) {
     relancerPublicite = false;
