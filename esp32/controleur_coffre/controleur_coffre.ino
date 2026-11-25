@@ -716,7 +716,7 @@ void verifierReponse() {
   }
 }
 
-// ---- Demarrage ----
+// ---- Démarrage ----
 void setup() {
 
   // Configure le clavier
@@ -729,7 +729,7 @@ void setup() {
     pinMode(colonnes[c], INPUT_PULLDOWN);
   }
 
-  // Initialise l'ecran LCD
+  // Initialise l'écran LCD
   Wire.begin(21, 22);
   lcd.init();
   lcd.backlight();
