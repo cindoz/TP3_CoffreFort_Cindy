@@ -418,5 +418,20 @@
         "numero": "0000",
         "date": "2026-11-25T14:30:51",
         "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T16:37:22",
+        "resultat": "REFUSE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T16:37:36",
+        "resultat": "AUTORISE"
+    },
+    {
+        "numero": "0000",
+        "date": "2026-11-25T16:38:30",
+        "resultat": "AUTORISE"
     }
 ]
